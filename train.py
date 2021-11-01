@@ -9,14 +9,14 @@ from torch.optim import Adam
 
 from dataset.e_piano import create_epiano_datasets, compute_epiano_accuracy
 
-# from model.music_transformer import MusicTransformer
-# from model.loss import SmoothCrossEntropyLoss
+from model.music_transformer import MusicTransformer
+from model.loss import SmoothCrossEntropyLoss
 
-import utilities.constants as CONSTS
+from utilities.constants import *
 from utilities.device import get_device, use_cuda
-# from utilities.lr_scheduling import LrStepTracker, get_lr
+from utilities.lr_scheduling import LrStepTracker, get_lr
 from utilities.argument_funcs import parse_train_args, print_train_args, write_model_params
-# from utilities.run_model import train_epoch, eval_model
+from utilities.run_model import train_epoch, eval_model
 
 CSV_HEADER = ["Epoch", "Learn rate", "Avg Train loss",
               "Train Accuracy", "Avg Eval loss", "Eval accuracy"]
@@ -78,91 +78,86 @@ def main():
     test_loader = DataLoader(
         test_dataset, batch_size=args.batch_size, num_workers=args.n_workers)
 
-    print(train_loader)
-    print(dir(train_loader))
-    print(type(train_loader))
-    print(len(train_dataset))
+    model = MusicTransformer(n_layers=args.n_layers, num_heads=args.num_heads,
+                             d_model=args.d_model, dim_feedforward=args.dim_feedforward, dropout=args.dropout,
+                             max_sequence=args.max_sequence, rpr=args.rpr).to(get_device())
 
-    # model = MusicTransformer(n_layers=args.n_layers, num_heads=args.num_heads,
-    #                          d_model=args.d_model, dim_feedforward=args.dim_feedforward, dropout=args.dropout,
-    #                          max_sequence=args.max_sequence, rpr=args.rpr).to(get_device())
+    ##### Continuing from previous training session #####
+    start_epoch = BASELINE_EPOCH
+    if(args.continue_weights is not None):
+        if(args.continue_epoch is None):
+            print(
+                "ERROR: Need epoch number to continue from (-continue_epoch) when using continue_weights")
+            return
+        else:
+            model.load_state_dict(torch.load(args.continue_weights))
+            start_epoch = args.continue_epoch
+    elif(args.continue_epoch is not None):
+        print("ERROR: Need continue weights (-continue_weights) when using continue_epoch")
+        return
 
-    # ##### Continuing from previous training session #####
-    # start_epoch = BASELINE_EPOCH
-    # if(args.continue_weights is not None):
-    #     if(args.continue_epoch is None):
-    #         print(
-    #             "ERROR: Need epoch number to continue from (-continue_epoch) when using continue_weights")
-    #         return
-    #     else:
-    #         model.load_state_dict(torch.load(args.continue_weights))
-    #         start_epoch = args.continue_epoch
-    # elif(args.continue_epoch is not None):
-    #     print("ERROR: Need continue weights (-continue_weights) when using continue_epoch")
-    #     return
+    ##### Lr Scheduler vs static lr #####
+    if(args.lr is None):
+        if(args.continue_epoch is None):
+            init_step = 0
+        else:
+            init_step = args.continue_epoch * len(train_loader)
 
-    # ##### Lr Scheduler vs static lr #####
-    # if(args.lr is None):
-    #     if(args.continue_epoch is None):
-    #         init_step = 0
-    #     else:
-    #         init_step = args.continue_epoch * len(train_loader)
+        lr = LR_DEFAULT_START
+        lr_stepper = LrStepTracker(
+            args.d_model, SCHEDULER_WARMUP_STEPS, init_step)
+    else:
+        lr = args.lr
 
-    #     lr = LR_DEFAULT_START
-    #     lr_stepper = LrStepTracker(
-    #         args.d_model, SCHEDULER_WARMUP_STEPS, init_step)
-    # else:
-    #     lr = args.lr
+    ##### Not smoothing evaluation loss #####
+    eval_loss_func = nn.CrossEntropyLoss(ignore_index=TOKEN_PAD)
 
-    # ##### Not smoothing evaluation loss #####
-    # eval_loss_func = nn.CrossEntropyLoss(ignore_index=TOKEN_PAD)
+    ##### SmoothCrossEntropyLoss or CrossEntropyLoss for training #####
+    if(args.ce_smoothing is None):
+        train_loss_func = eval_loss_func
+    else:
+        train_loss_func = SmoothCrossEntropyLoss(
+            args.ce_smoothing, VOCAB_SIZE, ignore_index=TOKEN_PAD)
 
-    # ##### SmoothCrossEntropyLoss or CrossEntropyLoss for training #####
-    # if(args.ce_smoothing is None):
-    #     train_loss_func = eval_loss_func
-    # else:
-    #     train_loss_func = SmoothCrossEntropyLoss(
-    #         args.ce_smoothing, VOCAB_SIZE, ignore_index=TOKEN_PAD)
+    ##### Optimizer #####
+    opt = Adam(model.parameters(), lr=lr, betas=(
+        ADAM_BETA_1, ADAM_BETA_2), eps=ADAM_EPSILON)
 
-    # ##### Optimizer #####
-    # opt = Adam(model.parameters(), lr=lr, betas=(
-    #     ADAM_BETA_1, ADAM_BETA_2), eps=ADAM_EPSILON)
+    if(args.lr is None):
+        lr_scheduler = LambdaLR(opt, lr_stepper.step)
+    else:
+        lr_scheduler = None
 
-    # if(args.lr is None):
-    #     lr_scheduler = LambdaLR(opt, lr_stepper.step)
-    # else:
-    #     lr_scheduler = None
+    ##### Tracking best evaluation accuracy #####
+    best_eval_acc = 0.0
+    best_eval_acc_epoch = -1
+    best_eval_loss = float("inf")
+    best_eval_loss_epoch = -1
 
-    # ##### Tracking best evaluation accuracy #####
-    # best_eval_acc = 0.0
-    # best_eval_acc_epoch = -1
-    # best_eval_loss = float("inf")
-    # best_eval_loss_epoch = -1
+    ##### Results reporting #####
+    if(not os.path.isfile(results_file)):
+        with open(results_file, "w", newline="") as o_stream:
+            writer = csv.writer(o_stream)
+            writer.writerow(CSV_HEADER)
 
-    # ##### Results reporting #####
-    # if(not os.path.isfile(results_file)):
-    #     with open(results_file, "w", newline="") as o_stream:
-    #         writer = csv.writer(o_stream)
-    #         writer.writerow(CSV_HEADER)
+    ##### TRAIN LOOP #####
+    for epoch in range(start_epoch, args.epochs):
+        # Baseline has no training and acts as a base loss and accuracy (epoch 0 in a sense)
+        if(epoch > BASELINE_EPOCH):
+            print(SEPERATOR)
+            print("NEW EPOCH:", epoch + 1)
+            print(SEPERATOR)
+            print("")
 
-    # ##### TRAIN LOOP #####
-    # for epoch in range(start_epoch, args.epochs):
-    #     # Baseline has no training and acts as a base loss and accuracy (epoch 0 in a sense)
-    #     if(epoch > BASELINE_EPOCH):
-    #         print(SEPERATOR)
-    #         print("NEW EPOCH:", epoch + 1)
-    #         print(SEPERATOR)
-    #         print("")
+            # Train
+            train_epoch(epoch + 1, model, train_loader,
+                        train_loss_func, opt, lr_scheduler, args.print_modulus)
 
-    #         # Train
-    #         train_epoch(epoch + 1, model, train_loader,
-    #                     train_loss_func, opt, lr_scheduler, args.print_modulus)
-
-    #         print(SEPERATOR)
-    #         print("Evaluating:")
-    #     else:
-    #         print(SEPERATOR)
-    #         print("Baseline model evaluation (Epoch 0):")
+            print(SEPERATOR)
+            print("Evaluating:")
+        else:
+            print(SEPERATOR)
+            print("Baseline model evaluation (Epoch 0):")
 
     #     # Eval
     #     train_loss, train_acc = eval_model(

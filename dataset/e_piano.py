@@ -8,7 +8,7 @@ import torch.nn as nn
 import glob
 from torch.utils.data import Dataset
 
-import utilities.constants as CONST
+from utilities.constants import *
 from utilities.device import cpu_device
 
 SEQUENCE_START = 0

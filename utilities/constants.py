@@ -17,7 +17,7 @@ SCHEDULER_WARMUP_STEPS = 4000
 TOKEN_END = 3
 TOKEN_PAD = 1
 
-with open('./music_vocab.pkl') as f:
+with open('./music_vocab.pkl', 'rb') as f:
     vcb = pickle.load(f)
     VOCAB_SIZE = len(vcb)
 

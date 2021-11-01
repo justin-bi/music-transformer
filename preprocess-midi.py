@@ -27,6 +27,7 @@ def prep_files(dataset_root, output_dir):
     events = set()
 
     np.random.seed(0)
+    file_encodings_list = []
 
     for f_name in tqdm(glob.glob(os.path.join(dataset_root, "**/*symbol_key.json"), recursive=True)):
         split_type = np.random.choice(
@@ -47,18 +48,7 @@ def prep_files(dataset_root, output_dir):
 
         encoded = _encode_midi_file(f_name)
         events.update(encoded)
-        # break
-
-        # Creat the dir if it doesn't already exist
-        if not os.path.exists(os.path.dirname(o_file)):
-            try:
-                os.makedirs(os.path.dirname(o_file))
-            except OSError as exc:  # Guard against race condition
-                if exc.errno != errno.EEXIST:
-                    raise
-
-        with open(o_file, "wb") as o_stream:
-            pickle.dump(o_file, o_stream)
+        file_encodings_list.append((o_file, encoded))
 
     print("Num Total:", total_count)
     print("Num Train:", train_count)
@@ -73,6 +63,20 @@ def prep_files(dataset_root, output_dir):
                                             specials=special_symbols,
                                             special_first=True)
     music_vocab.set_default_index(0)
+    # print(music_vocab.get_itos())
+    # print(music_vocab(encoded))
+
+    for o_file, encoded in tqdm(file_encodings_list):
+        # Creat the dir if it doesn't already exist
+        if not os.path.exists(os.path.dirname(o_file)):
+            try:
+                os.makedirs(os.path.dirname(o_file))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+        with open(o_file, "wb") as o_stream:
+            pickle.dump(music_vocab(encoded), o_stream)
+
     with open('./utilities/music_vocab.pkl', 'wb') as f:
         pickle.dump(music_vocab, f)
     return True

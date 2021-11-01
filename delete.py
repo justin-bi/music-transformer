@@ -1,8 +1,9 @@
 import pickle
-from torchtext.vocab import build_vocab_from_iterator
 
+with open('./dataset/mel-chords/test/a/a-great-big-world/say-something/chorus_symbol_key.json', 'rb') as f:
+    tmp = pickle.load(f)
 
 with open('./music_vocab.pkl', 'rb') as f:
     vcb = pickle.load(f)
-    print(vcb.get_itos())
-    print(len(vcb))
+    for i in tmp:
+        print(vcb.get_itos()[i])
