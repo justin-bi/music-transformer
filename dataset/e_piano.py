@@ -88,12 +88,16 @@ def process_midi(raw_mid, max_seq, random_seq):
     tgt = torch.full((max_seq, ), TOKEN_PAD,
                      dtype=TORCH_LABEL_TYPE, device=cpu_device())
 
+    # UNCOMMENT THIS
     raw_len = len(raw_mid)
+    # raw_len = max_seq
+
     full_seq = max_seq + 1  # Performing seq2seq
 
     if(raw_len == 0):
         return x, tgt
-
+    # print(raw_len)
+    # print(full_seq)
     if(raw_len < full_seq):
         x[:raw_len] = raw_mid
         tgt[:raw_len - 1] = raw_mid[1:]
@@ -115,9 +119,11 @@ def process_midi(raw_mid, max_seq, random_seq):
         x = data[:max_seq]
         tgt = data[1:full_seq]
 
-    # print("x:",x)
-    # print("tgt:",tgt)
+    # print("x:", x)
+    # print("tgt:", tgt)
 
+    # while True:
+    #     pass
     return x, tgt
 
 

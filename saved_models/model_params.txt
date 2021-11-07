@@ -2,7 +2,7 @@ rpr: False
 lr: None
 ce_smoothing: None
 batch_size: 2
-max_sequence: 1024
+max_sequence: 512
 n_layers: 6
 num_heads: 8
 d_model: 512

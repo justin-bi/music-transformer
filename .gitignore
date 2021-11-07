@@ -2,3 +2,4 @@
 **/event
 **/__pycache__
 **/.DS_Store
+**/tensorboard
