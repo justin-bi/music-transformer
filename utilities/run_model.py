@@ -75,7 +75,9 @@ def eval_model(model, dataloader, loss):
         n_test = len(dataloader)
         sum_loss = 0.0
         sum_acc = 0.0
-        for batch in dataloader:
+        for i, batch in enumerate(dataloader):
+            if i % 100 == 0:
+                print("Batch", i)
             x = batch[0].to(get_device())
             tgt = batch[1].to(get_device())
 
