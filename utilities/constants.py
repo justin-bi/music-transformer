@@ -17,7 +17,7 @@ SCHEDULER_WARMUP_STEPS = 4000
 TOKEN_END = 3
 TOKEN_PAD = 1
 
-with open('./music_vocab.pkl', 'rb') as f:
+with open('./utilities/music_vocab.pkl', 'rb') as f:
     vcb = pickle.load(f)
     VOCAB_SIZE = len(vcb)
 
@@ -27,3 +27,6 @@ TORCH_INT = torch.int32
 TORCH_LABEL_TYPE = torch.long
 
 PREPEND_ZEROS_WIDTH = 4
+
+if __name__ == "__main__":
+    print("Should only be accessed from the directory above")
