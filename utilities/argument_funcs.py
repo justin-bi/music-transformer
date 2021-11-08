@@ -56,7 +56,7 @@ def parse_train_args():
                         help="Dimension of the model (output dim of embedding layers, etc.)")
 
     parser.add_argument("-dim_feedforward", type=int,
-                        default=512, help="Dimension of the feedforward layer")
+                        default=256, help="Dimension of the feedforward layer")
 
     parser.add_argument("-dropout", type=float,
                         default=0.1, help="Dropout rate")
@@ -138,7 +138,7 @@ def parse_eval_args():
                         help="Dimension of the model (output dim of embedding layers, etc.)")
 
     parser.add_argument("-dim_feedforward", type=int,
-                        default=512, help="Dimension of the feedforward layer")
+                        default=256, help="Dimension of the feedforward layer")
 
     return parser.parse_args()
 
@@ -212,7 +212,7 @@ def parse_generate_args():
                         help="Dimension of the model (output dim of embedding layers, etc.)")
 
     parser.add_argument("-dim_feedforward", type=int,
-                        default=512, help="Dimension of the feedforward layer")
+                        default=256, help="Dimension of the feedforward layer")
 
     return parser.parse_args()
 
