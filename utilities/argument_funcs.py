@@ -20,7 +20,7 @@ def parse_train_args():
                         help="Folder to save model weights. Saves one every epoch by default")
     parser.add_argument("-weight_modulus", type=int, default=1,
                         help="How often to save epoch weights (ex: value of 10 means save every 10 epochs)")
-    parser.add_argument("-print_modulus", type=int, default=5,
+    parser.add_argument("-print_modulus", type=int, default=100,
                         help="How often to print train results for a batch (batch loss, learn rate, etc.)")
 
     parser.add_argument("-n_workers", type=int, default=1,
