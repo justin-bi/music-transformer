@@ -48,7 +48,8 @@ def train_epoch(cur_epoch, model, dataloader, loss, opt, lr_scheduler=None, prin
             print(SEPERATOR)
             print("Epoch", cur_epoch, " Batch",
                   batch_num + 1, "/", len(dataloader))
-            print("LR:", get_lr(opt))
+            # Don't see a point in having lr atm, can add back in if we need to
+            # print("LR:", get_lr(opt))
             print("Train loss:", float(out))
             print("")
             print("Time (s):", time_took)
