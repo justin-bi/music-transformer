@@ -142,7 +142,8 @@ class MusicTransformer(nn.Module):
         while(cur_i < target_seq_length):
             # gen_seq_batch     = gen_seq.clone()
             y = self.softmax(self.forward(
-                gen_seq[..., :cur_i]))[..., :TOKEN_END]
+                gen_seq[..., :cur_i]))[..., :VOCAB_SIZE + 1]
+            # gen_seq[..., :cur_i]))[..., :TOKEN_END]
             token_probs = y[:, cur_i - 1, :]
 
             if(beam == 0):

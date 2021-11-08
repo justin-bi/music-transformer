@@ -14,12 +14,13 @@ SCHEDULER_WARMUP_STEPS = 4000
 
 # DROPOUT_P               = 0.1
 
-TOKEN_END = 3
-TOKEN_PAD = 1
-
 with open('./utilities/music_vocab.pkl', 'rb') as f:
     vcb = pickle.load(f)
     VOCAB_SIZE = len(vcb)
+
+TOKEN_END = 3
+# TOKEN_END = VOCAB_SIZE + 1
+TOKEN_PAD = 1
 
 TORCH_FLOAT = torch.float32
 TORCH_INT = torch.int32

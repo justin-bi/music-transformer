@@ -1,0 +1,2 @@
+- remove the tensorboard parts
+- eventually start renaming things when a good baseline is established. 
