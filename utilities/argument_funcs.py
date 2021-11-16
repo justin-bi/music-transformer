@@ -39,7 +39,7 @@ def parse_train_args():
                         help="Constant learn rate. Leave as None for a custom scheduler.")
     parser.add_argument("-ce_smoothing", type=float, default=None,
                         help="Smoothing parameter for smoothed cross entropy loss (defaults to no smoothing)")
-    parser.add_argument("-batch_size", type=int, default=2,
+    parser.add_argument("-batch_size", type=int, default=16,
                         help="Batch size to use")
     parser.add_argument("-epochs", type=int, default=20,
                         help="Number of epochs to use")
@@ -123,7 +123,7 @@ def parse_eval_args():
     parser.add_argument("--force_cpu", action="store_true",
                         help="Forces model to run on a cpu even when gpu is available")
 
-    parser.add_argument("-batch_size", type=int, default=2,
+    parser.add_argument("-batch_size", type=int, default=16,
                         help="Batch size to use")
 
     parser.add_argument("--rpr", action="store_true",
