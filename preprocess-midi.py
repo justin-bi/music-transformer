@@ -10,14 +10,13 @@ from torchtext.vocab import build_vocab_from_iterator
 
 def prep_files(dataset_root, output_dir):
 
+    # Create the directories to house the splits
     train_dir = os.path.join(output_dir, "train")
     os.makedirs(train_dir, exist_ok=True)
     val_dir = os.path.join(output_dir, "val")
     os.makedirs(val_dir, exist_ok=True)
     test_dir = os.path.join(output_dir, "test")
     os.makedirs(test_dir, exist_ok=True)
-
-    print("Preprocessing...")
 
     total_count = 0
     train_count = 0
@@ -63,8 +62,6 @@ def prep_files(dataset_root, output_dir):
                                             specials=special_symbols,
                                             special_first=True)
     music_vocab.set_default_index(0)
-    # print(music_vocab.get_itos())
-    # print(music_vocab(encoded))
 
     for o_file, encoded in tqdm(file_encodings_list):
         # Creat the dir if it doesn't already exist

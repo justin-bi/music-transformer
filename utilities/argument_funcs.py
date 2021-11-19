@@ -27,8 +27,6 @@ def parse_train_args():
                         help="Number of threads for the dataloader")
     parser.add_argument("--force_cpu", action="store_true",
                         help="Forces model to run on a cpu even when gpu is available")
-    parser.add_argument("--no_tensorboard", action="store_true", default=True,
-                        help="Turns off tensorboard result reporting")
 
     parser.add_argument("-continue_weights", type=str, default=None,
                         help="Model weights to continue training based on")
@@ -81,7 +79,6 @@ def print_train_args(args):
     print("")
     print("n_workers:", args.n_workers)
     print("force_cpu:", args.force_cpu)
-    print("tensorboard:", not args.no_tensorboard)
     print("")
     print("continue_weights:", args.continue_weights)
     print("continue_epoch:", args.continue_epoch)

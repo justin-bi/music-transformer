@@ -58,15 +58,6 @@ def main():
     best_acc_file = os.path.join(results_folder, "best_acc_weights.pickle")
     best_text = os.path.join(results_folder, "best_epochs.txt")
 
-    ##### Tensorboard #####
-    if(args.no_tensorboard):
-        tensorboard_summary = None
-    else:
-        from torch.utils.tensorboard import SummaryWriter
-
-        tensorboad_dir = os.path.join(args.output_dir, "tensorboard")
-        tensorboard_summary = SummaryWriter(log_dir=tensorboad_dir)
-
     ##### Datasets #####
     train_dataset, val_dataset, test_dataset = create_epiano_datasets(
         args.input_dir, args.max_sequence)
@@ -199,19 +190,6 @@ def main():
                       best_eval_loss_epoch, file=o_stream)
                 print("Best eval loss:", best_eval_loss, file=o_stream)
 
-        if(not args.no_tensorboard):
-            tensorboard_summary.add_scalar(
-                "Avg_CE_loss/train", train_loss, global_step=epoch + 1)
-            tensorboard_summary.add_scalar(
-                "Avg_CE_loss/eval", eval_loss, global_step=epoch + 1)
-            tensorboard_summary.add_scalar(
-                "Accuracy/train", train_acc, global_step=epoch + 1)
-            tensorboard_summary.add_scalar(
-                "Accuracy/eval", eval_acc, global_step=epoch + 1)
-            tensorboard_summary.add_scalar(
-                "Learn_rate/train", lr, global_step=epoch + 1)
-            tensorboard_summary.flush()
-
         if((epoch + 1) % args.weight_modulus == 0):
             epoch_str = str(epoch + 1).zfill(PREPEND_ZEROS_WIDTH)
             path = os.path.join(weights_folder, "epoch_" +
@@ -222,10 +200,6 @@ def main():
             writer = csv.writer(o_stream)
             writer.writerow([epoch + 1, lr, train_loss,
                             train_acc, eval_loss, eval_acc])
-
-    # Sanity check just to make sure everything is gone
-    if(not args.no_tensorboard):
-        tensorboard_summary.flush()
 
     return
 
