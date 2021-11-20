@@ -2,3 +2,5 @@
 **/event
 **/__pycache__
 **/.DS_Store
+**/chord_list.pkl
+**/delete.py

@@ -1,2 +1,3 @@
 - eventually start renaming things when a good baseline is established. 
 - Actually add start and end tokens to the files
+- Potentially add more augmentation by shifting up and down octaves
