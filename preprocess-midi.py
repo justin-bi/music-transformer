@@ -59,13 +59,8 @@ def prep_files(dataset_root, output_dir, pitch_augment, time_augment):
         total_count += augment_count
 
         # All augmentations will go into the same split, just to speed things up a bit
-        for pitch in range(num_pitches):
-            for stretch in time_range:
-                st = round(stretch, 1)
-                iter_o_file = o_file.replace('_symbol_key.json', '/p=' + str(pitch) + '&t=' + str(st))
-
-                # If we want to do pitch augmentation, then we'll cycle through all of the
-                _encode_midi_file(f_name, num_pitches, time_range, events, file_encodings_list, iter_o_file)
+        _encode_midi_file(f_name, num_pitches, time_range,
+                          events, file_encodings_list, o_file)
 
     print("Num Total:", total_count)
     print("Num Train:", train_count)
@@ -97,7 +92,7 @@ def prep_files(dataset_root, output_dir, pitch_augment, time_augment):
 
     return True
 
-def _encode_midi_file(f_name, num_pitches, time_range, event_set, file_list, iter_o_file):
+def _encode_midi_file(f_name, num_pitches, time_range, event_set, file_list, o_file):
     with open(f_name) as f:
         json_dict = json.load(f)
 
@@ -117,8 +112,7 @@ def _encode_midi_file(f_name, num_pitches, time_range, event_set, file_list, ite
 
         events.sort(key=lambda i: (i[1], i[2]))
 
-        meta = json_dict['metadata']
-        bpm = float(meta.get('BPM'))
+        bpm = float(json_dict['metadata'].get('BPM'))
         if bpm == 0:
             bpm = 120
 
@@ -135,15 +129,16 @@ def _encode_midi_file(f_name, num_pitches, time_range, event_set, file_list, ite
                             time -= 1000
                         encoded.append('TS<' + str(time) + '>')
                         cur_time = event[1]
-                    val = event[0]
-                    if isinstance(event[0], int):
-                        val += pitch
-                    else:
-                        val = _pitch_up(val, pitch)
-                    encoded.append(event[2] + '<' + str(val) + '>')
+                    encoded.append(event[2] + '<' + str(event[0]) + '>')
                 event_set.update(encoded)
-                file_list.append((iter_o_file, encoded))
-    return True
+                file_list.append((o_file.replace('_symbol_key.json', '/p=' + str(pitch) + '&t=' + str(st)),
+                                  encoded))
+            for i, event in enumerate(events):
+                val = (event[0] + 1) if isinstance(event[0],
+                                                   int) else _pitch_up(event[0], 1)
+                events[i] = (val, event[1], event[2])
+
+        return True
 
 # Converts the number of beats to the rounded wall time (to the nearest
 # ms) given the provided bpm
@@ -198,7 +193,7 @@ def _pitch_up(chord, pitch_amt):
         for idx in reversed(idxs):
             new_chord[idx] = 'G'
             alter_idxs.append((idx + 1, 'del'))
-        
+
         # G
         idxs = [i.start() for i in re.finditer('G(?![#b])', prev_chord)]
         for idx in reversed(idxs):
@@ -245,7 +240,8 @@ def _pitch_up(chord, pitch_amt):
             alter_idxs.append((idx + 1, 'del'))
 
         # d
-        idxs = [i.start() for i in re.finditer('(?<![ad])d(?![#b])', prev_chord)]
+        idxs = [i.start() for i in re.finditer(
+            '(?<![ad])d(?![#b])', prev_chord)]
         for idx in reversed(idxs):
             new_chord[idx] = 'e'
             alter_idxs.append((idx + 1, 'b'))
@@ -272,7 +268,7 @@ def _pitch_up(chord, pitch_amt):
         for idx in reversed(idxs):
             new_chord[idx] = 'g'
             alter_idxs.append((idx + 1, 'del'))
-        
+
         # g
         idxs = [i.start() for i in re.finditer('g(?![#b])', prev_chord)]
         for idx in reversed(idxs):
@@ -298,7 +294,8 @@ def _pitch_up(chord, pitch_amt):
             alter_idxs.append((idx + 1, 'del'))
 
         # b
-        idxs = [i.start() for i in re.finditer('(?![A-G|a|c-g])b(?![#b|0-9])', prev_chord)]
+        idxs = [i.start() for i in re.finditer(
+            '(?![A-G|a|c-g])b(?![#b|0-9])', prev_chord)]
         for idx in reversed(idxs):
             new_chord[idx] = 'c'
 
