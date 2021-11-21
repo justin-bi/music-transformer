@@ -131,7 +131,7 @@ def _encode_midi_file(f_name, num_pitches, time_range, event_set, file_list, o_f
                         cur_time = event[1]
                     encoded.append(event[2] + '<' + str(event[0]) + '>')
                 event_set.update(encoded)
-                file_list.append((o_file.replace('_symbol_key.json', '/p=' + str(pitch) + '&t=' + str(st)),
+                file_list.append((o_file.replace('_symbol_key.json', '/p=' + str(pitch) + '_t=' + str(st)),
                                   encoded))
             for i, event in enumerate(events):
                 val = (event[0] + 1) if isinstance(event[0],
