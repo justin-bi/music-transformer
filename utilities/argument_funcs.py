@@ -136,6 +136,8 @@ def parse_eval_args():
 
     parser.add_argument("-dim_feedforward", type=int,
                         default=256, help="Dimension of the feedforward layer")
+    parser.add_argument("-perp", type=bool, default=False,
+                        help="Print perplexity when evaluating a model")
 
     return parser.parse_args()
 

@@ -52,6 +52,8 @@ def main():
 
     print("Avg loss:", avg_loss)
     print("Avg acc:", avg_acc)
+    if args.perp:
+        print("Perplexity:", torch.exp(avg_loss))
     print(SEPERATOR)
     print("")
 
