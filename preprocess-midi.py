@@ -29,7 +29,6 @@ def prep_files(dataset_root, output_dir, pitch_augment, time_augment):
     np.random.seed(0)
     file_encodings_list = []
 
-
     num_pitches = 12 if pitch_augment else 1
     time_stretch = 0
     augment_amt = round(time_augment, 1)
@@ -60,16 +59,13 @@ def prep_files(dataset_root, output_dir, pitch_augment, time_augment):
         total_count += augment_count
 
         # All augmentations will go into the same split, just to speed things up a bit
-        orig_events = _get_event_list(f_name)
         for pitch in range(num_pitches):
             for stretch in time_range:
                 st = round(stretch, 1)
                 iter_o_file = o_file.replace('_symbol_key.json', '/p=' + str(pitch) + '&t=' + str(st))
 
                 # If we want to do pitch augmentation, then we'll cycle through all of the
-                encoded = _encode_midi_file(f_name, orig_events, pitch, st)
-                events.update(encoded)
-                file_encodings_list.append((iter_o_file, encoded))
+                _encode_midi_file(f_name, num_pitches, time_range, events, file_encodings_list, iter_o_file)
 
     print("Num Total:", total_count)
     print("Num Train:", train_count)
@@ -86,7 +82,7 @@ def prep_files(dataset_root, output_dir, pitch_augment, time_augment):
     music_vocab.set_default_index(0)
 
     for o_file, encoded in tqdm(file_encodings_list):
-        # Creat the dir if it doesn't already exist
+        # Create the dir if it doesn't already exist
         if not os.path.exists(os.path.dirname(o_file)):
             try:
                 os.makedirs(os.path.dirname(o_file))
@@ -98,11 +94,13 @@ def prep_files(dataset_root, output_dir, pitch_augment, time_augment):
 
     with open('./utilities/music_vocab.pkl', 'wb') as f:
         pickle.dump(music_vocab, f)
+
     return True
 
-def _get_event_list(f_name):
+def _encode_midi_file(f_name, num_pitches, time_range, event_set, file_list, iter_o_file):
     with open(f_name) as f:
         json_dict = json.load(f)
+
         events = []
         for melody_note in json_dict['tracks']['melody']:
             if not melody_note:
@@ -118,35 +116,34 @@ def _get_event_list(f_name):
             events.append((chord['symbol'], chord['event_off'], 'CHOFF'))
 
         events.sort(key=lambda i: (i[1], i[2]))
-        return events
 
-
-def _encode_midi_file(f_name, events, pitch, stretch):
-    with open(f_name) as f:
-        json_dict = json.load(f)
         meta = json_dict['metadata']
         bpm = float(meta.get('BPM'))
         if bpm == 0:
             bpm = 120
-        bpm *= stretch # If it's anything besides 1, it'll do a time augment
 
-        cur_time = 0
-        encoded = []
-        for event in events:
-            if cur_time != event[1]:
-                time = _beats_to_time(event[1] - cur_time, bpm)
-                while time > 1000:
-                    encoded.append('TS<1000>')
-                    time -= 1000
-                encoded.append('TS<' + str(time) + '>')
-                cur_time = event[1]
-            val = event[0]
-            if isinstance(event[0], int):
-                val += pitch
-            else:
-                val = _pitch_up(val, pitch)
-            encoded.append(event[2] + '<' + str(val) + '>')
-        return encoded
+        for pitch in range(num_pitches):
+            for stretch in time_range:
+                st = round(stretch, 1)
+                cur_time = 0
+                encoded = []
+                for event in events:
+                    if cur_time != event[1]:
+                        time = _beats_to_time(event[1] - cur_time, bpm * st)
+                        while time > 1000:
+                            encoded.append('TS<1000>')
+                            time -= 1000
+                        encoded.append('TS<' + str(time) + '>')
+                        cur_time = event[1]
+                    val = event[0]
+                    if isinstance(event[0], int):
+                        val += pitch
+                    else:
+                        val = _pitch_up(val, pitch)
+                    encoded.append(event[2] + '<' + str(val) + '>')
+                event_set.update(encoded)
+                file_list.append(iter_o_file, encoded)
+    return True
 
 # Converts the number of beats to the rounded wall time (to the nearest
 # ms) given the provided bpm
