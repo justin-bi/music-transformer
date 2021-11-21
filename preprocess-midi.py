@@ -142,7 +142,7 @@ def _encode_midi_file(f_name, num_pitches, time_range, event_set, file_list, ite
                         val = _pitch_up(val, pitch)
                     encoded.append(event[2] + '<' + str(val) + '>')
                 event_set.update(encoded)
-                file_list.append(iter_o_file, encoded)
+                file_list.append((iter_o_file, encoded))
     return True
 
 # Converts the number of beats to the rounded wall time (to the nearest
