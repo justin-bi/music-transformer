@@ -29,36 +29,47 @@ def prep_files(dataset_root, output_dir, pitch_augment, time_augment):
     np.random.seed(0)
     file_encodings_list = []
 
+
+    num_pitches = 12 if pitch_augment else 1
+    time_stretch = 0
+    augment_amt = round(time_augment, 1)
+    if 0 < augment_amt < 1:
+        time_stretch = augment_amt
+    time_range = np.arange(1 - time_stretch, 1 + time_stretch, 0.1)
+    # If time_stretch = 0, the above gives empty list for some reason
+    if len(time_range) == 0:
+        time_range = [1.0]
+    augment_count = num_pitches * len(time_range)
+
     for f_name in tqdm(glob.glob(os.path.join(dataset_root, "**/*symbol_key.json"), recursive=True)):
-        num_pitches = 12 if pitch_augment else 1
-        time_stretch = 0
-        augment_amt = round(time_augment, 1)
-        if 0 < augment_amt < 1:
-            time_stretch = augment_amt
+        # First get the split type, and from that determine which directory to add it to
+        split_type = np.random.choice(
+            ["train", "val", "test"], p=[0.7, 0.15, 0.15])
+        if split_type == "train":
+            o_file = f_name.replace('/event/', '/mel-chords/train/')
+            train_count += augment_count
+        elif split_type == "val":
+            o_file = f_name.replace('/event/', '/mel-chords/val/')
+            val_count += augment_count
+        elif split_type == "test":
+            o_file = f_name.replace('/event/', '/mel-chords/test/')
+            test_count += augment_count
+        else:
+            print("ERROR: Unrecognized split type:", split_type)
+            return False
+        total_count += augment_count
+
+        # All augmentations will go into the same split, just to speed things up a bit
+        orig_events = _get_event_list(f_name)
         for pitch in range(num_pitches):
-            for stretch in np.arange(1 - time_stretch, 1 + time_stretch, 0.1):
+            for stretch in time_range:
                 st = round(stretch, 1)
-                split_type = np.random.choice(
-                    ["train", "val", "test"], p=[0.7, 0.15, 0.15])
-                if split_type == "train":
-                    o_file = f_name.replace('/event/', '/mel-chords/train/')
-                    train_count += 1
-                elif split_type == "val":
-                    o_file = f_name.replace('/event/', '/mel-chords/val/')
-                    val_count += 1
-                elif split_type == "test":
-                    o_file = f_name.replace('/event/', '/mel-chords/test/')
-                    test_count += 1
-                else:
-                    print("ERROR: Unrecognized split type:", split_type)
-                    return False
-                total_count += 1
-                o_file = o_file.replace('_symbol_key.json', '/p=' + str(pitch) + '&t=' + str(st))
+                iter_o_file = o_file.replace('_symbol_key.json', '/p=' + str(pitch) + '&t=' + str(st))
 
                 # If we want to do pitch augmentation, then we'll cycle through all of the
-                encoded = _encode_midi_file(f_name, pitch, st)
+                encoded = _encode_midi_file(f_name, orig_events, pitch, st)
                 events.update(encoded)
-                file_encodings_list.append((o_file, encoded))
+                file_encodings_list.append((iter_o_file, encoded))
 
     print("Num Total:", total_count)
     print("Num Train:", train_count)
@@ -89,7 +100,28 @@ def prep_files(dataset_root, output_dir, pitch_augment, time_augment):
         pickle.dump(music_vocab, f)
     return True
 
-def _encode_midi_file(f_name, pitch, stretch):
+def _get_event_list(f_name):
+    with open(f_name) as f:
+        json_dict = json.load(f)
+        events = []
+        for melody_note in json_dict['tracks']['melody']:
+            if not melody_note:
+                continue
+            midi = int(melody_note['pitch'] + 60)
+            events.append((midi, melody_note['event_on'], 'NON'))
+            events.append((midi, melody_note['event_off'], 'NOFF'))
+
+        for chord in json_dict['tracks']['chord']:
+            if not chord:
+                continue
+            events.append((chord['symbol'], chord['event_on'], 'CHON'))
+            events.append((chord['symbol'], chord['event_off'], 'CHOFF'))
+
+        events.sort(key=lambda i: (i[1], i[2]))
+        return events
+
+
+def _encode_midi_file(f_name, events, pitch, stretch):
     with open(f_name) as f:
         json_dict = json.load(f)
         meta = json_dict['metadata']
@@ -97,23 +129,6 @@ def _encode_midi_file(f_name, pitch, stretch):
         if bpm == 0:
             bpm = 120
         bpm *= stretch # If it's anything besides 1, it'll do a time augment
-        events = []
-        for melody_note in json_dict['tracks']['melody']:
-            if not melody_note:
-                continue
-            midi = int(melody_note['pitch'] + 60)
-            midi += pitch
-            events.append((midi, melody_note['event_on'], 'NON'))
-            events.append((midi, melody_note['event_off'], 'NOFF'))
-
-        for chord in json_dict['tracks']['chord']:
-            if not chord:
-                continue
-            augment_symbol = _pitch_up(chord['symbol'], pitch)
-            events.append((augment_symbol, chord['event_on'], 'CHON'))
-            events.append((augment_symbol, chord['event_off'], 'CHOFF'))
-
-        events.sort(key=lambda i: (i[1], i[2]))
 
         cur_time = 0
         encoded = []
@@ -125,8 +140,13 @@ def _encode_midi_file(f_name, pitch, stretch):
                     time -= 1000
                 encoded.append('TS<' + str(time) + '>')
                 cur_time = event[1]
-            encoded.append(event[2] + '<' + str(event[0]) + '>')
-    return encoded
+            val = event[0]
+            if isinstance(event[0], int):
+                val += pitch
+            else:
+                val = _pitch_up(val, pitch)
+            encoded.append(event[2] + '<' + str(val) + '>')
+        return encoded
 
 # Converts the number of beats to the rounded wall time (to the nearest
 # ms) given the provided bpm
