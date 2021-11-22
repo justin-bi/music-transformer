@@ -34,7 +34,7 @@ class EPianoDataset(Dataset):
 
         # fs = [os.path.join(root, f) for f in os.listdir(self.root)]
         fs = [f for f in glob.glob(os.path.join(
-            self.root, "**/*symbol_key.json"), recursive=True)]
+            self.root, "**/p-*_t-*"), recursive=True)]
         self.data_files = [f for f in fs if os.path.isfile(f)]
 
     # __len__
