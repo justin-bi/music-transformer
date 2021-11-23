@@ -44,7 +44,7 @@ def parse_train_args():
 
     parser.add_argument("--rpr", action="store_true",
                         help="Use a modified Transformer for Relative Position Representations")
-    parser.add_argument("-max_sequence", type=int, default=1024,
+    parser.add_argument("-max_sequence", type=int, default=512,
                         help="Maximum midi sequence to consider")
     parser.add_argument("-n_layers", type=int, default=3,
                         help="Number of decoder layers to use")
@@ -125,7 +125,7 @@ def parse_eval_args():
 
     parser.add_argument("--rpr", action="store_true",
                         help="Use a modified Transformer for Relative Position Representations")
-    parser.add_argument("-max_sequence", type=int, default=1024,
+    parser.add_argument("-max_sequence", type=int, default=512,
                         help="Maximum midi sequence to consider in the model")
     parser.add_argument("-n_layers", type=int, default=3,
                         help="Number of decoder layers to use")
@@ -201,7 +201,7 @@ def parse_generate_args():
 
     parser.add_argument("--rpr", action="store_true",
                         help="Use a modified Transformer for Relative Position Representations")
-    parser.add_argument("-max_sequence", type=int, default=1024,
+    parser.add_argument("-max_sequence", type=int, default=512,
                         help="Maximum midi sequence to consider")
     parser.add_argument("-n_layers", type=int, default=3,
                         help="Number of decoder layers to use")

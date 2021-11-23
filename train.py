@@ -59,13 +59,15 @@ def main():
     best_text = os.path.join(results_folder, "best_epochs.txt")
 
     ##### Datasets #####
-    train_dataset, val_dataset, test_dataset = create_epiano_datasets(
+    train_dataset, _, test_dataset = create_epiano_datasets(
         args.input_dir, args.max_sequence)
+    # train_dataset, val_dataset, test_dataset = create_epiano_datasets(
+    #     args.input_dir, args.max_sequence)
 
     train_loader = DataLoader(
         train_dataset, batch_size=args.batch_size, num_workers=args.n_workers, shuffle=True)
-    val_loader = DataLoader(
-        val_dataset, batch_size=args.batch_size, num_workers=args.n_workers)
+    # val_loader = DataLoader(
+    #     val_dataset, batch_size=args.batch_size, num_workers=args.n_workers)
     test_loader = DataLoader(
         test_dataset, batch_size=args.batch_size, num_workers=args.n_workers)
 
