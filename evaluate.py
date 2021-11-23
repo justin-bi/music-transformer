@@ -31,7 +31,7 @@ def main():
 
     # Test dataset
     _, _, test_dataset = create_epiano_datasets(
-        args.dataset_dir, args.max_sequence)
+        args.dataset_dir, args.max_sequence, test=True)
 
     test_loader = DataLoader(
         test_dataset, batch_size=args.batch_size, num_workers=args.n_workers)

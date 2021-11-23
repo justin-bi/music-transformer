@@ -60,9 +60,7 @@ def main():
 
     ##### Datasets #####
     train_dataset, _, test_dataset = create_epiano_datasets(
-        args.input_dir, args.max_sequence)
-    # train_dataset, val_dataset, test_dataset = create_epiano_datasets(
-    #     args.input_dir, args.max_sequence)
+        args.input_dir, args.max_sequence, train=True, test=True)
 
     train_loader = DataLoader(
         train_dataset, batch_size=args.batch_size, num_workers=args.n_workers, shuffle=True)

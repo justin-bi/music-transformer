@@ -34,7 +34,7 @@ def main():
 
     # Grabbing dataset if needed
     _, _, dataset = create_epiano_datasets(
-        args.midi_root, args.num_prime, random_seq=False)
+        args.midi_root, args.num_prime, random_seq=False, test=True)
 
     # Can be None, an integer index to dataset, or a file path
     # FOR NOW, always default to a random primer file.
