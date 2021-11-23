@@ -36,7 +36,8 @@ def main():
                              d_model=args.d_model, dim_feedforward=args.dim_feedforward,
                              max_sequence=args.max_sequence, rpr=args.rpr).to(get_device())
 
-    model.load_state_dict(torch.load(args.model_weights))
+    # model.load_state_dict(torch.load(args.model_weights))
+    model.load_state_dict(torch.load(args.model_weights), strict=False)
 
     # Grabbing dataset if needed
     _, _, dataset = create_epiano_datasets(
