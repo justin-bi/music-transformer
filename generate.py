@@ -32,6 +32,12 @@ def main():
 
     os.makedirs(args.output_dir, exist_ok=True)
 
+    model = MusicTransformer(n_layers=args.n_layers, num_heads=args.num_heads,
+                             d_model=args.d_model, dim_feedforward=args.dim_feedforward,
+                             max_sequence=args.max_sequence, rpr=args.rpr).to(get_device())
+
+    model.load_state_dict(torch.load(args.model_weights))
+
     # Grabbing dataset if needed
     _, _, dataset = create_epiano_datasets(
         args.midi_root, args.num_prime, random_seq=False, test=True)
@@ -61,12 +67,6 @@ def main():
     #         primer, dtype=TORCH_LABEL_TYPE, device=get_device())
 
     #     print("Using primer file:", f)
-
-    model = MusicTransformer(n_layers=args.n_layers, num_heads=args.num_heads,
-                             d_model=args.d_model, dim_feedforward=args.dim_feedforward,
-                             max_sequence=args.max_sequence, rpr=args.rpr).to(get_device())
-
-    model.load_state_dict(torch.load(args.model_weights))
 
     # Saving primer first
     f_path = os.path.join(args.output_dir, "primer.mid")

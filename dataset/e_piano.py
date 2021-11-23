@@ -138,6 +138,8 @@ def create_epiano_datasets(dataset_root, max_seq, random_seq=True, train=False, 
     ----------
     """
 
+    print('\nCreating dataset(s)')
+
     train_root = os.path.join(dataset_root, "train")
     val_root = os.path.join(dataset_root, "val")
     test_root = os.path.join(dataset_root, "test")
@@ -147,6 +149,8 @@ def create_epiano_datasets(dataset_root, max_seq, random_seq=True, train=False, 
     val_dataset = EPianoDataset(val_root, max_seq, random_seq) if val else None
     test_dataset = EPianoDataset(
         test_root, max_seq, random_seq) if test else None
+
+    print('\nFinished creating dataset(s)')
 
     return train_dataset, val_dataset, test_dataset
 
