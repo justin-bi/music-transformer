@@ -1,6 +1,5 @@
 - eventually start renaming things when a good baseline is established. 
 - Actually add start and end tokens to the files
-- Potentially add more augmentation by shifting up and down octaves
 - Remodel so the preprocessing goes a bit faster
 - Retrain so that the chords are the composition vectors, then map the comp_vecs 
   to chord names afterwards

@@ -1,6 +1,5 @@
 import os
 import csv
-import shutil
 import torch
 import torch.nn as nn
 from torch.optim.lr_scheduler import LambdaLR
@@ -27,11 +26,8 @@ BASELINE_EPOCH = -1
 # main
 def main():
     """
-    ----------
     Author: Damon Gwinn
-    ----------
     Entry point. Trains a model specified by command line arguments
-    ----------
     """
 
     args = parse_train_args()
@@ -64,8 +60,6 @@ def main():
 
     train_loader = DataLoader(
         train_dataset, batch_size=args.batch_size, num_workers=args.n_workers, shuffle=True)
-    # val_loader = DataLoader(
-    #     val_dataset, batch_size=args.batch_size, num_workers=args.n_workers)
     test_loader = DataLoader(
         test_dataset, batch_size=args.batch_size, num_workers=args.n_workers)
 
@@ -137,8 +131,7 @@ def main():
         if(epoch > BASELINE_EPOCH):
             print(SEPERATOR)
             print("NEW EPOCH:", epoch + 1)
-            print(SEPERATOR)
-            print("")
+            print(SEPERATOR + '\n')
 
             # Train
             train_epoch(epoch + 1, model, train_loader,
@@ -163,8 +156,7 @@ def main():
         print("Avg train acc:", train_acc)
         print("Avg eval loss:", eval_loss)
         print("Avg eval acc:", eval_acc)
-        print(SEPERATOR)
-        print("")
+        print(SEPERATOR + '\n')
 
         new_best = False
 
@@ -185,8 +177,7 @@ def main():
             with open(best_text, "w") as o_stream:
                 print("Best eval acc epoch:", best_eval_acc_epoch, file=o_stream)
                 print("Best eval acc:", best_eval_acc, file=o_stream)
-                print("")
-                print("Best eval loss epoch:",
+                print("\nBest eval loss epoch:",
                       best_eval_loss_epoch, file=o_stream)
                 print("Best eval loss:", best_eval_loss, file=o_stream)
 
@@ -205,5 +196,4 @@ def main():
 
 
 if __name__ == "__main__":
-    print("In main")
     main()

@@ -11,11 +11,8 @@ from dataset.e_piano import compute_epiano_accuracy
 # train_epoch
 def train_epoch(cur_epoch, model, dataloader, loss, opt, lr_scheduler=None, print_modulus=1):
     """
-    ----------
     Author: Damon Gwinn
-    ----------
     Trains a single model epoch
-    ----------
     """
 
     out = -1
@@ -61,11 +58,8 @@ def train_epoch(cur_epoch, model, dataloader, loss, opt, lr_scheduler=None, prin
 # eval_model
 def eval_model(model, dataloader, loss):
     """
-    ----------
     Author: Damon Gwinn
-    ----------
     Evaluates the model and prints the average loss and accuracy
-    ----------
     """
 
     model.eval()

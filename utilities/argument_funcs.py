@@ -5,11 +5,8 @@ from .constants import SEPERATOR
 # parse_train_args
 def parse_train_args():
     """
-    ----------
     Author: Damon Gwinn
-    ----------
     Argparse arguments for training a model
-    ----------
     """
 
     parser = argparse.ArgumentParser()
@@ -64,11 +61,8 @@ def parse_train_args():
 # print_train_args
 def print_train_args(args):
     """
-    ----------
     Author: Damon Gwinn
-    ----------
     Prints training arguments
-    ----------
     """
 
     print(SEPERATOR)
@@ -102,11 +96,8 @@ def print_train_args(args):
 # parse_eval_args
 def parse_eval_args():
     """
-    ----------
     Author: Damon Gwinn
-    ----------
     Argparse arguments for evaluating a model
-    ----------
     """
 
     parser = argparse.ArgumentParser()
@@ -144,11 +135,8 @@ def parse_eval_args():
 # print_eval_args
 def print_eval_args(args):
     """
-    ----------
     Author: Damon Gwinn
-    ----------
     Prints evaluation arguments
-    ----------
     """
 
     print(SEPERATOR)
@@ -166,17 +154,13 @@ def print_eval_args(args):
     print("d_model:", args.d_model)
     print("")
     print("dim_feedforward:", args.dim_feedforward)
-    print(SEPERATOR)
-    print("")
+    print(SEPERATOR + '\n')
 
 # parse_generate_args
 def parse_generate_args():
     """
-    ----------
     Author: Damon Gwinn
-    ----------
     Argparse arguments for generation
-    ----------
     """
 
     parser = argparse.ArgumentParser()
@@ -218,11 +202,8 @@ def parse_generate_args():
 # print_generate_args
 def print_generate_args(args):
     """
-    ----------
     Author: Damon Gwinn
-    ----------
     Prints generation arguments
-    ----------
     """
 
     print(SEPERATOR)
@@ -249,11 +230,8 @@ def print_generate_args(args):
 # write_model_params
 def write_model_params(args, output_file):
     """
-    ----------
     Author: Damon Gwinn
-    ----------
     Writes given training parameters to text file
-    ----------
     """
 
     o_stream = open(output_file, "w")

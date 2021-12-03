@@ -17,14 +17,11 @@ import warnings
 # TransformerEncoderRPR
 class TransformerEncoderRPR(Module):
     """
-    ----------
     Author: Pytorch
-    ----------
     For Relative Position Representation support (https://arxiv.org/abs/1803.02155)
     https://pytorch.org/docs/1.2.0/_modules/torch/nn/modules/transformer.html#TransformerEncoder
 
     No modification. Copied here to ensure continued compatibility with other edits.
-    ----------
     """
 
     def __init__(self, encoder_layer, num_layers, norm=None):
@@ -49,20 +46,19 @@ class TransformerEncoderRPR(Module):
 # TransformerEncoderLayerRPR
 class TransformerEncoderLayerRPR(Module):
     """
-    ----------
     Author: Pytorch
     Modified: Damon Gwinn
-    ----------
+
     For Relative Position Representation support (https://arxiv.org/abs/1803.02155)
     https://pytorch.org/docs/1.2.0/_modules/torch/nn/modules/transformer.html#TransformerEncoderLayer
 
     Modification to create and call custom MultiheadAttentionRPR
-    ----------
     """
 
     def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1, er_len=None):
         super(TransformerEncoderLayerRPR, self).__init__()
-        self.self_attn = MultiheadAttentionRPR(d_model, nhead, dropout=dropout, er_len=er_len)
+        self.self_attn = MultiheadAttentionRPR(
+            d_model, nhead, dropout=dropout, er_len=er_len)
         # Implementation of Feedforward model
         self.linear1 = Linear(d_model, dim_feedforward)
         self.dropout = Dropout(dropout)
@@ -107,7 +103,8 @@ class MultiheadAttentionRPR(Module):
         self.num_heads = num_heads
         self.dropout = dropout
         self.head_dim = embed_dim // num_heads
-        assert self.head_dim * num_heads == self.embed_dim, "embed_dim must be divisible by num_heads"
+        assert self.head_dim * \
+            num_heads == self.embed_dim, "embed_dim must be divisible by num_heads"
 
         self.in_proj_weight = Parameter(torch.empty(3 * embed_dim, embed_dim))
 
@@ -132,7 +129,8 @@ class MultiheadAttentionRPR(Module):
 
         # Adding RPR embedding matrix
         if(er_len is not None):
-            self.Er = Parameter(torch.rand((er_len, self.head_dim), dtype=torch.float32))
+            self.Er = Parameter(torch.rand(
+                (er_len, self.head_dim), dtype=torch.float32))
         else:
             self.Er = None
 
@@ -205,40 +203,47 @@ class MultiheadAttentionRPR(Module):
 
 # multi_head_attention_forward_rpr
 def multi_head_attention_forward_rpr(query,                       # type: Tensor
-                                 key,                             # type: Tensor
-                                 value,                           # type: Tensor
-                                 embed_dim_to_check,              # type: int
-                                 num_heads,                       # type: int
-                                 in_proj_weight,                  # type: Tensor
-                                 in_proj_bias,                    # type: Tensor
-                                 bias_k,                          # type: Optional[Tensor]
-                                 bias_v,                          # type: Optional[Tensor]
-                                 add_zero_attn,                   # type: bool
-                                 dropout_p,                       # type: float
-                                 out_proj_weight,                 # type: Tensor
-                                 out_proj_bias,                   # type: Tensor
-                                 training=True,                   # type: bool
-                                 key_padding_mask=None,           # type: Optional[Tensor]
-                                 need_weights=True,               # type: bool
-                                 attn_mask=None,                  # type: Optional[Tensor]
-                                 use_separate_proj_weight=False,  # type: bool
-                                 q_proj_weight=None,              # type: Optional[Tensor]
-                                 k_proj_weight=None,              # type: Optional[Tensor]
-                                 v_proj_weight=None,              # type: Optional[Tensor]
-                                 static_k=None,                   # type: Optional[Tensor]
-                                 static_v=None,                   # type: Optional[Tensor]
-                                 rpr_mat=None
-                                 ):
+                                     key,                             # type: Tensor
+                                     value,                           # type: Tensor
+                                     embed_dim_to_check,              # type: int
+                                     num_heads,                       # type: int
+                                     in_proj_weight,                  # type: Tensor
+                                     in_proj_bias,                    # type: Tensor
+                                     # type: Optional[Tensor]
+                                     bias_k,
+                                     # type: Optional[Tensor]
+                                     bias_v,
+                                     add_zero_attn,                   # type: bool
+                                     dropout_p,                       # type: float
+                                     out_proj_weight,                 # type: Tensor
+                                     out_proj_bias,                   # type: Tensor
+                                     training=True,                   # type: bool
+                                     # type: Optional[Tensor]
+                                     key_padding_mask=None,
+                                     need_weights=True,               # type: bool
+                                     # type: Optional[Tensor]
+                                     attn_mask=None,
+                                     use_separate_proj_weight=False,  # type: bool
+                                     # type: Optional[Tensor]
+                                     q_proj_weight=None,
+                                     # type: Optional[Tensor]
+                                     k_proj_weight=None,
+                                     # type: Optional[Tensor]
+                                     v_proj_weight=None,
+                                     # type: Optional[Tensor]
+                                     static_k=None,
+                                     # type: Optional[Tensor]
+                                     static_v=None,
+                                     rpr_mat=None
+                                     ):
     """
-    ----------
     Author: Pytorch
     Modified: Damon Gwinn
-    ----------
+
     For Relative Position Representation support (https://arxiv.org/abs/1803.02155)
     https://pytorch.org/docs/1.2.0/_modules/torch/nn/functional.html
 
     Modification to take RPR embedding matrix and perform skew optimized RPR (https://arxiv.org/abs/1809.04281)
-    ----------
     """
 
     # type: (...) -> Tuple[Tensor, Optional[Tensor]]
@@ -258,7 +263,8 @@ def multi_head_attention_forward_rpr(query,                       # type: Tensor
     if use_separate_proj_weight is not True:
         if qkv_same:
             # self-attention
-            q, k, v = linear(query, in_proj_weight, in_proj_bias).chunk(3, dim=-1)
+            q, k, v = linear(query, in_proj_weight,
+                             in_proj_bias).chunk(3, dim=-1)
 
         elif kv_same:
             # encoder-decoder attention
@@ -328,8 +334,10 @@ def multi_head_attention_forward_rpr(query,                       # type: Tensor
 
         if in_proj_bias is not None:
             q = linear(query, q_proj_weight_non_opt, in_proj_bias[0:embed_dim])
-            k = linear(key, k_proj_weight_non_opt, in_proj_bias[embed_dim:(embed_dim * 2)])
-            v = linear(value, v_proj_weight_non_opt, in_proj_bias[(embed_dim * 2):])
+            k = linear(key, k_proj_weight_non_opt,
+                       in_proj_bias[embed_dim:(embed_dim * 2)])
+            v = linear(value, v_proj_weight_non_opt,
+                       in_proj_bias[(embed_dim * 2):])
         else:
             q = linear(query, q_proj_weight_non_opt, in_proj_bias)
             k = linear(key, k_proj_weight_non_opt, in_proj_bias)
@@ -381,8 +389,10 @@ def multi_head_attention_forward_rpr(query,                       # type: Tensor
 
     if add_zero_attn:
         src_len += 1
-        k = torch.cat([k, torch.zeros((k.size(0), 1) + k.size()[2:], dtype=k.dtype, device=k.device)], dim=1)
-        v = torch.cat([v, torch.zeros((v.size(0), 1) + v.size()[2:], dtype=v.dtype, device=v.device)], dim=1)
+        k = torch.cat([k, torch.zeros((k.size(0), 1) + k.size()
+                      [2:], dtype=k.dtype, device=k.device)], dim=1)
+        v = torch.cat([v, torch.zeros((v.size(0), 1) + v.size()
+                      [2:], dtype=v.dtype, device=v.device)], dim=1)
         if attn_mask is not None:
             attn_mask = torch.cat([attn_mask, torch.zeros((attn_mask.size(0), 1),
                                                           dtype=attn_mask.dtype,
@@ -394,7 +404,8 @@ def multi_head_attention_forward_rpr(query,                       # type: Tensor
                                                device=key_padding_mask.device)], dim=1)
 
     attn_output_weights = torch.bmm(q, k.transpose(1, 2))
-    assert list(attn_output_weights.size()) == [bsz * num_heads, tgt_len, src_len]
+    assert list(attn_output_weights.size()) == [
+        bsz * num_heads, tgt_len, src_len]
 
     ######### ADDITION OF RPR ###########
     if(rpr_mat is not None):
@@ -409,37 +420,39 @@ def multi_head_attention_forward_rpr(query,                       # type: Tensor
         attn_output_weights += attn_mask
 
     if key_padding_mask is not None:
-        attn_output_weights = attn_output_weights.view(bsz, num_heads, tgt_len, src_len)
+        attn_output_weights = attn_output_weights.view(
+            bsz, num_heads, tgt_len, src_len)
         attn_output_weights = attn_output_weights.masked_fill(
             key_padding_mask.unsqueeze(1).unsqueeze(2),
             float('-inf'),
         )
-        attn_output_weights = attn_output_weights.view(bsz * num_heads, tgt_len, src_len)
+        attn_output_weights = attn_output_weights.view(
+            bsz * num_heads, tgt_len, src_len)
 
     attn_output_weights = softmax(
         attn_output_weights, dim=-1)
 
-    attn_output_weights = dropout(attn_output_weights, p=dropout_p, training=training)
+    attn_output_weights = dropout(
+        attn_output_weights, p=dropout_p, training=training)
 
     attn_output = torch.bmm(attn_output_weights, v)
     assert list(attn_output.size()) == [bsz * num_heads, tgt_len, head_dim]
-    attn_output = attn_output.transpose(0, 1).contiguous().view(tgt_len, bsz, embed_dim)
+    attn_output = attn_output.transpose(
+        0, 1).contiguous().view(tgt_len, bsz, embed_dim)
     attn_output = linear(attn_output, out_proj_weight, out_proj_bias)
 
     if need_weights:
         # average attention weights over heads
-        attn_output_weights = attn_output_weights.view(bsz, num_heads, tgt_len, src_len)
+        attn_output_weights = attn_output_weights.view(
+            bsz, num_heads, tgt_len, src_len)
         return attn_output, attn_output_weights.sum(dim=1) / num_heads
     else:
         return attn_output, None
 
 def _get_valid_embedding(Er, len_q, len_k):
     """
-    ----------
     Author: Damon Gwinn
-    ----------
     Gets valid embeddings based on max length of RPR attention
-    ----------
     """
 
     len_e = Er.shape[0]
@@ -448,18 +461,15 @@ def _get_valid_embedding(Er, len_q, len_k):
 
 def _skew(qe):
     """
-    ----------
     Author: Damon Gwinn
-    ----------
     Performs the skew optimized RPR computation (https://arxiv.org/abs/1809.04281)
-    ----------
     """
 
     sz = qe.shape[1]
     mask = (torch.triu(torch.ones(sz, sz).to(qe.device)) == 1).float().flip(0)
 
     qe = mask * qe
-    qe = F.pad(qe, (1,0, 0,0, 0,0))
+    qe = F.pad(qe, (1, 0, 0, 0, 0, 0))
     qe = torch.reshape(qe, (qe.shape[0], qe.shape[2], qe.shape[1]))
 
     srel = qe[:, 1:, :]

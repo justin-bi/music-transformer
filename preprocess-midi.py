@@ -9,7 +9,22 @@ import re
 from tqdm import tqdm
 from torchtext.vocab import build_vocab_from_iterator
 
-def prep_files(dataset_root, output_dir, pitch_augment, time_augment):
+def prep_files(dataset_root, output_dir, pitch_augment, time_augment, genres):
+
+    # Create valid paths for the genres
+    valid_paths = set()
+    if genres:
+        with open('./genre_to_paths_dict.pkl', 'rb') as f:
+            genre_to_paths_dict = pickle.load(f)
+        genre_arr = genres.split(',')
+        for genre in genre_arr:
+            valid_paths = valid_paths.union(genre_to_paths_dict[genre])
+        if len(valid_paths) == 0:
+            print('No valid paths based on genres, exiting prep_files')
+            return
+        print('Detected ' + str(len(valid_paths)) + ' valid paths')
+    else:
+        print('All paths are valid')
 
     # Create the directories to house the splits
     train_dir = os.path.join(output_dir, "train")
@@ -41,6 +56,10 @@ def prep_files(dataset_root, output_dir, pitch_augment, time_augment):
     augment_count = num_pitches * len(time_range)
 
     for f_name in tqdm(glob.glob(os.path.join(dataset_root, "**/*symbol_key.json"), recursive=True)):
+        if valid_paths and f_name[:f_name.rindex('/') + 1] not in valid_paths:
+            print(f_name)
+            return
+            continue
         # First get the split type, and from that determine which directory to add it to
         split_type = np.random.choice(
             ["train", "val", "test"], p=[0.7, 0.15, 0.15])
@@ -76,6 +95,8 @@ def prep_files(dataset_root, output_dir, pitch_augment, time_augment):
                                             special_first=True)
     music_vocab.set_default_index(0)
 
+    # For every file, create its dir if it doesn't exist
+    # and pickle the encoded version.
     for o_file, encoded in tqdm(file_encodings_list):
         # Create the dir if it doesn't already exist
         if not os.path.exists(os.path.dirname(o_file)):
@@ -131,14 +152,12 @@ def _encode_midi_file(f_name, num_pitches, time_range, event_set, file_list, o_f
                         cur_time = event[1]
                     encoded.append(event[2] + '<' + str(event[0]) + '>')
                 event_set.update(encoded)
-                file_list.append((o_file.replace('_symbol_key.json', '/p-' + str(pitch) + '_t-' + str(st).replace('.', '')),
+                file_list.append((o_file.replace('_symbol_key.json', '/p-' + str(pitch) + '_t-' + str(st * 10)),
                                   encoded))
             for i, event in enumerate(events):
                 val = (event[0] + 1) if isinstance(event[0],
                                                    int) else _pitch_up(event[0], 1)
                 events[i] = (val, event[1], event[2])
-
-        return True
 
 # Converts the number of beats to the rounded wall time (to the nearest
 # ms) given the provided bpm
@@ -321,6 +340,8 @@ def parse_args():
                         help="If True, augments the song to all keys")
     parser.add_argument("-time_augment", type=float, default=0,
                         help="A value in (0, 1), dictates how much to timeshift in both directions")
+    parser.add_argument("-genre", type=str, default=None,
+                        help="Filter the dataset by genre. To filter by multiple genres, separate them with commas")
 
     return parser.parse_args()
 
@@ -331,7 +352,8 @@ if __name__ == "__main__":
     output_dir = args.output_dir
     pitch_augment = args.pitch_augment
     time_augment = args.time_augment
+    genres = args.genre
 
     print("Preprocessing midi files and saving to", output_dir)
-    prep_files(data_root, output_dir, pitch_augment, time_augment)
+    prep_files(data_root, output_dir, pitch_augment, time_augment, genres)
     print("Done!\n")

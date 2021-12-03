@@ -8,7 +8,7 @@ import pickle
 
 from utilities.argument_funcs import parse_generate_args, print_generate_args
 from model.music_transformer import MusicTransformer
-from dataset.e_piano import create_epiano_datasets, process_midi
+from dataset.e_piano import create_epiano_datasets
 
 from utilities.constants import *
 from utilities.device import get_device, use_cuda
@@ -16,11 +16,8 @@ from utilities.device import get_device, use_cuda
 # main
 def main():
     """
-    ----------
     Author: Damon Gwinn
-    ----------
     Entry point. Generates music from a model specified by command line arguments
-    ----------
     """
 
     args = parse_generate_args()
